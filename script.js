@@ -1,27 +1,47 @@
-var cartas = [
+var cartasFixed = [
   {
     nome: "Bulbassauro",
     atributos: { ataque: 7, defesa: 8, magia: 6 },
-    img:
-      "http://pm1.narvii.com/6223/11335ffde96efad386b23068bb8751d77e26c1ef_00.jpg"
+    img: "https://gartic.com.br/imgs/mural/jh/jhonfs/bulbassauro.png"
   },
   {
     nome: "Darth Vader",
     atributos: { ataque: 9, defesa: 8, magia: 2 },
-    img:
-      "https://a-static.mlcdn.com.br/1500x1500/boneco-darth-vader-olympus-star-wars-hasbro/toymaniabrinquedos/77093/eee45ee57ee0aed7d8b70091dba0813f.jpg"
+    img: "https://sm.ign.com/ign_br/screenshot/default/darth-vader_5yvm.jpg"
   },
   {
     nome: "Shiryu",
     atributos: { ataque: 5, defesa: 9, magia: 10 },
     img:
-      "https://static3.tcdn.com.br/img/img_prod/460977/action_figure_shiryu_dragon_shiryu_os_cavaleiros_do_zodiaco_saint_seiya_saint_cloth_myth_revival_ver_49959_1_20201211173104.jpg"
+      "https://pbs.twimg.com/profile_images/835464493119438849/i242Npy-_400x400.jpg"
   },
   {
     nome: "Neo",
     atributos: { ataque: 4, defesa: 10, magia: 8 },
     img:
       "https://img.estadao.com.br/thumbs/640/resources/jpg/7/6/1566336669167.jpg"
+  },
+  {
+    nome: "Simba",
+    atributos: { ataque: 8, defesa: 6, magia: 2 },
+    img: "http://oreileao.com.br/wp-content/uploads/2012/09/images1.jpg"
+  },
+  {
+    nome: "Harry Potter",
+    atributos: { ataque: 3, defesa: 7, magia: 9 },
+    img: "http://imagem.band.com.br/f_480959.jpg"
+  },
+  {
+    nome: "Rambo",
+    atributos: { ataque: 10, defesa: 1, magia: 1 },
+    img:
+      "https://observatoriodocinema.uol.com.br/wp-content/uploads/2021/07/rambo-1200-900.jpg"
+  },
+  {
+    nome: "Rumpelstiltskin",
+    atributos: { ataque: 2, defesa: 6, magia: 10 },
+    img:
+      "http://blog.cancaonova.com/livresdetodomal/files/2012/06/Rumpelstiltskin-Livres-de-todo-Mal.jpg"
   }
   // template de nova carta
   // {
@@ -31,22 +51,58 @@ var cartas = [
   // }
 ];
 
+var cartas = [...cartasFixed];
+
 var cartaMaquina = 0;
 var cartaJogador = 0;
 
-function sortearCarta() {
-  var indiceCartaMaquina = parseInt(Math.random() * cartas.length);
-  cartaMaquina = cartas[indiceCartaMaquina];
+var deckJogador = [];
+var deckMaquina = [];
 
-  do {
-    var indiceCartaJogador = parseInt(Math.random() * cartas.length);
-  } while (indiceCartaJogador == indiceCartaMaquina);
-  cartaJogador = cartas[indiceCartaJogador];
+function sortearDecks() {
+  cartas = [...cartasFixed];
+  shuffle(cartas);
+  deckJogador = [];
+  deckMaquina = [];
+  while (cartas.length) {
+    deckJogador.push(cartas.shift());
+    deckMaquina.push(cartas.shift());
+  }
+}
+
+function shuffle(array) {
+  let currentIndex = array.length,
+    randomIndex;
+
+  // While there remain elements to shuffle...
+  while (currentIndex != 0) {
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex]
+    ];
+  }
+
+  return array;
+}
+
+function sortearCarta() {
+  cartaMaquina = deckMaquina.shift();
+  cartaJogador = deckJogador.shift();
 
   document.getElementById("btnSortear").disabled = true;
   document.getElementById("btnJogar").disabled = false;
 
   exibirCarta(cartaJogador, true);
+  var divCartaMaquina = document.getElementById("carta-maquina");
+  divCartaMaquina.style.backgroundImage = ``;
+  var moldura =
+    '<img src="https://www.alura.com.br/assets/img/imersoes/dev-2021/card-super-trunfo-transparent-ajustado.png" style=" width: inherit; height: inherit; position: absolute;">';
+  divCartaMaquina.innerHTML = moldura;
 }
 
 function exibirCarta(carta, jogador) {
@@ -102,15 +158,26 @@ function jogar() {
 
   if (valorCartaMaquina > valorCartaJogador) {
     divResultado.innerHTML = "<p class='resultado-final'>Você Perdeu!</p>";
+    deckMaquina.push(cartaJogador);
+    deckMaquina.push(cartaMaquina);
   } else if (valorCartaMaquina == valorCartaJogador) {
     divResultado.innerHTML = "<p class='resultado-final'>Empate!</p>";
+    deckMaquina.push(cartaMaquina);
+    deckJogador.push(cartaJogador);
   } else {
     divResultado.innerHTML = "<p class='resultado-final'>Você Venceu!</p>";
+    deckJogador.push(cartaMaquina);
+    deckJogador.push(cartaJogador);
   }
 
   document.getElementById("btnJogar").disabled = true;
   exibirCarta(cartaMaquina, false);
-  document.getElementById("btnReset").disabled = false;
+  balance();
+  if (deckJogador.length && deckMaquina.length) {
+    document.getElementById("btnSortear").disabled = false;
+  } else {
+    document.getElementById("btnReset").disabled = false;
+  }
 }
 
 function reset() {
@@ -127,4 +194,17 @@ function reset() {
 
   document.getElementById("btnSortear").disabled = false;
   document.getElementById("btnReset").disabled = true;
+
+  sortearDecks();
+  balance();
 }
+
+sortearDecks();
+
+function balance() {
+  var elementoQtd = document.getElementById("qtd");
+  elementoQtd.innerHTML =
+    deckJogador.length + " carta(s) VS " + deckMaquina.length + " carta(s)";
+}
+
+balance();
