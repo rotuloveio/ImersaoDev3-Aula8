@@ -58,6 +58,9 @@ var cartaJogador = 0;
 
 var deckJogador = [];
 var deckMaquina = [];
+var pilhaEmpate = [];
+
+var turnoJogador = true;
 
 function sortearDecks() {
   cartas = [...cartasFixed];
@@ -117,8 +120,8 @@ function exibirCarta(carta, jogador) {
   var tagHTML = "<div id='opcoes' class='carta-status'>";
 
   var opcoesTexto = "";
-  if (jogador) {
-    for (var atributo in cartaJogador.atributos) {
+  if (jogador && turnoJogador) {
+    for (var atributo in carta.atributos) {
       opcoesTexto +=
         "<input type='radio' name='atributo' checked='true' value='" +
         atributo +
@@ -129,9 +132,9 @@ function exibirCarta(carta, jogador) {
         "<br>";
     }
   } else {
-    for (var atributo in cartaMaquina.atributos) {
+    for (var atributo in carta.atributos) {
       opcoesTexto +=
-        "<p> " + atributo + ": " + cartaMaquina.atributos[atributo] + "</p>";
+        "<p> " + atributo + ": " + carta.atributos[atributo] + "</p>";
     }
   }
 
@@ -143,9 +146,25 @@ function exibirCarta(carta, jogador) {
 function obtemAtributoSelecionado() {
   var radioAtributos = document.getElementsByName("atributo");
 
-  for (var i = 0; i < radioAtributos.length; i++) {
-    if (radioAtributos[i].checked) {
-      return radioAtributos[i].value;
+  if (turnoJogador) {
+    for (var i = 0; i < radioAtributos.length; i++) {
+      if (radioAtributos[i].checked) {
+        return radioAtributos[i].value;
+      }
+    }
+  } else {
+    if (
+      cartaMaquina.atributos.ataque >= cartaMaquina.atributos.defesa &&
+      cartaMaquina.atributos.ataque >= cartaMaquina.atributos.magia
+    ) {
+      return "ataque";
+    } else if (
+      cartaMaquina.atributos.defesa >= cartaMaquina.atributos.ataque &&
+      cartaMaquina.atributos.defesa >= cartaMaquina.atributos.magia
+    ) {
+      return "defesa";
+    } else {
+      return "magia";
     }
   }
 }
@@ -156,18 +175,38 @@ function jogar() {
   var valorCartaJogador = cartaJogador.atributos[atributoSelecionado];
   var valorCartaMaquina = cartaMaquina.atributos[atributoSelecionado];
 
+  if (turnoJogador) {
+    divResultado.innerHTML =
+      "<p class='resultado-final'>Você escolheu " +
+      atributoSelecionado +
+      ".</p>";
+  } else {
+    divResultado.innerHTML =
+      "<p class='resultado-final'>A máquina escolheu " +
+      atributoSelecionado +
+      ".</p>";
+  }
+
   if (valorCartaMaquina > valorCartaJogador) {
-    divResultado.innerHTML = "<p class='resultado-final'>Você Perdeu!</p>";
+    divResultado.innerHTML += "<p class='resultado-final'>Você Perdeu!</p>";
     deckMaquina.push(cartaJogador);
     deckMaquina.push(cartaMaquina);
+    while (pilhaEmpate.length) {
+      deckMaquina.push(pilhaEmpate.shift());
+    }
+    turnoJogador = false;
   } else if (valorCartaMaquina == valorCartaJogador) {
-    divResultado.innerHTML = "<p class='resultado-final'>Empate!</p>";
-    deckMaquina.push(cartaMaquina);
-    deckJogador.push(cartaJogador);
+    divResultado.innerHTML += "<p class='resultado-final'>Empate!</p>";
+    pilhaEmpate.push(cartaMaquina);
+    pilhaEmpate.push(cartaJogador);
   } else {
-    divResultado.innerHTML = "<p class='resultado-final'>Você Venceu!</p>";
+    divResultado.innerHTML += "<p class='resultado-final'>Você Venceu!</p>";
     deckJogador.push(cartaMaquina);
     deckJogador.push(cartaJogador);
+    while (pilhaEmpate.length) {
+      deckJogador.push(pilhaEmpate.shift());
+    }
+    turnoJogador = true;
   }
 
   document.getElementById("btnJogar").disabled = true;
@@ -194,6 +233,8 @@ function reset() {
 
   document.getElementById("btnSortear").disabled = false;
   document.getElementById("btnReset").disabled = true;
+
+  turnoJogador = true;
 
   sortearDecks();
   balance();
